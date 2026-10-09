@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экзамен по Уставу Weazel News</title>
+    <style>
+        :root {
+            --primary: #c0392b;
+            --primary-hover: #e74c3c;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            min-height: 480px;
+        }
+
+        .header {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            color: var(--primary-hover);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: var(--border);
+            width: 100%;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .content {
+            padding: 30px 25px 60px 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .question-title {
+            font-size: 1.15rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-hover);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-btn.correct {
+            background-color: rgba(34, 197, 94, 0.2);
+            border-color: var(--success);
+            color: #4ade80;
+        }
+
+        .option-btn.incorrect {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+            color: #f87171;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 20px;
+            align-self: flex-start;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .results {
+            text-align: center;
+        }
+
+        .results h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-hover);
+            margin: 20px 0;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .badge {
+            background-color: rgba(192, 57, 43, 0.2);
+            color: var(--primary-hover);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="content screen active">
+            <div style="text-align: center;">
+                <span class="badge">WEAZEL NEWS</span>
+                <h1 style="margin: 15px 0; font-size: 1.8rem;">Экзамен по Внутреннему Уставу</h1>
+                <p style="color: var(--text-muted); margin-bottom: 25px;">
+                    Тест состоит из 5 вопросов для быстрой проверки знаний устава организации.
+                </p>
+                <button class="btn-primary" style="align-self: center;" onclick="startQuiz()">Начать тест</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="header">
+                <h1>Weazel News Exam</h1>
+                <span id="question-count" class="badge">Вопрос 1/5</span>
+            </div>
+            <div class="content">
+                <div class="question-title" id="question-text">Загрузка вопроса...</div>
+                <div class="options-grid" id="options-container"></div>
+                <button id="next-btn" class="btn-primary" style="display: none;" onclick="nextQuestion()">Следующий вопрос</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="content screen">
+            <div class="results">
+                <h2>Экзамен завершен!</h2>
+                <p style="color: var(--text-muted);">Ваш результат:</p>
+                <div class="score-display" id="final-score">0 / 5</div>
+                <p id="result-message" style="margin-bottom: 25px; line-height: 1.5;"></p>
+                <button class="btn-primary" style="align-self: center;" onclick="restartQuiz()">Пройти еще раз</button>
+            </div>
+        </div>
+
+        <!-- Watermark Footer -->
+        <div class="watermark">
+            Portland - Gen. Director | Olivia Morris
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Какая часть средств от продажи услуг от лица Weazel News перечисляется на баланс организации?",
+                options: [
+                    "50% от суммы заказа",
+                    "80% от суммы заказа",
+                    "100% от суммы заказа",
+                    "На усмотрение сотрудника"
+                ],
+                correct: 1,
+                explanation: "Согласно п. 2.11 Устава, сотрудник обязан перечислять 80% средств от продажи на баланс организации."
+            },
+            {
+                question: "В течение какого времени стажер обязан пройти стажировку (с 1-го по 2-й ранг)?",
+                options: [
+                    "12 часов",
+                    "24 часа",
+                    "48 часов",
+                    "72 часа"
+                ],
+                correct: 1,
+                explanation: "Согласно п. 8.3 Устава, для перехода с 1-го по 2-й ранг установлены временные рамки в 24 часа."
+            },
+            {
+                question: "Какое максимальное суммарное время перерыва разрешено сотруднику в течение рабочего дня?",
+                options: [
+                    "60 минут (1 час)",
+                    "90 минут (1.5 часа)",
+                    "120 минут (2 часа)",
+                    "180 минут (3 часа)"
+                ],
+                correct: 2,
+                explanation: "Согласно п. 7.3 Устава, перерыв суммарно не должен превышать 120 минут (2 часа) в день."
+            },
+            {
+                question: "Разрешено ли сотруднику использовать огнестрельное оружие при исполнении обязанностей?",
+                options: [
+                    "Запрещено без исключений",
+                    "Разрешено в любое время",
+                    "Запрещено, за исключением случаев самообороны или угрозы жизни",
+                    "Разрешено только старшему составу"
+                ],
+                correct: 2,
+                explanation: "Согласно п. 3.6 Устава, использование оружия запрещено. Исключение: самооборона / угроза жизни."
+            },
+            {
+                question: "Сколько символов максимально может содержать зеленый эфир?",
+                options: [
+                    "Не более 300 символов",
+                    "Не более 400 символов",
+                    "Не более 500 символов",
+                    "Ограничений по символам нет"
+                ],
+                correct: 2,
+                explanation: "Согласно п. 9.1 Устава, зеленый эфир не может содержать более 500 символов."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = quizData[currentQuestion];
+            
+            document.getElementById('question-count').innerText = `Вопрос ${currentQuestion + 1}/${quizData.length}`;
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('progress').style.width = `${((currentQuestion) / quizData.length) * 100}%`;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.style.display = 'none';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = option;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex, btn) {
+            if (answered) return;
+            answered = true;
+
+            const q = quizData[currentQuestion];
+            const buttons = document.querySelectorAll('.option-btn');
+
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === q.correct) {
+                btn.classList.add('correct');
+                score++;
+            } else {
+                btn.classList.add('incorrect');
+                buttons[q.correct].classList.add('correct');
+            }
+
+            const nextBtn = document.getElementById('next-btn');
+            if (currentQuestion < quizData.length - 1) {
+                nextBtn.innerText = 'Следующий вопрос';
+            } else {
+                nextBtn.innerText = 'Посмотреть результаты';
+            }
+            nextBtn.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('progress').style.width = '100%';
+            showScreen('result-screen');
+            
+            const scoreDisplay = document.getElementById('final-score');
+            const messageDisplay = document.getElementById('result-message');
+            
+            scoreDisplay.innerText = `${score} / ${quizData.length}`;
+
+            if (score === 5) {
+                messageDisplay.innerText = "Отлично! Вы идеально знаете внутренний устав Weazel News.";
+                messageDisplay.style.color = "#4ade80";
+            } else if (score >= 3) {
+                messageDisplay.innerText = "Хороший результат! Вы сдали экзамен, но рекомендуется еще раз повторить некоторые пункты устава.";
+                messageDisplay.style.color = "#facc15";
+            } else {
+                messageDisplay.innerText = "Экзамен не сдан. Пожалуйста, внимательно ознакомьтесь с уставом и попробуйте снова.";
+                messageDisplay.style.color = "#f87171";
+            }
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
+```eof
+
+Файл сохранён как `weazel_news_exam.html`. Вы можете открыть его в любом браузере на ПК или мобильном устройстве для прохождения теста. На всех экранах снизу выведена ваша вотермарка `Portland - Gen. Director | Olivia Morris`.
